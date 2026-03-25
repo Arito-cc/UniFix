@@ -1,9 +1,0 @@
-student
-
-id: fr_omthakre
-pass: omthakre
-
-staff
-
-id: test_staff
-pass: teststaff
