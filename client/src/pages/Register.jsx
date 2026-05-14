@@ -1,209 +1,256 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    username: '',
-    email: '',
-    password: '',
-    role: 'Student', // Default role for UniFix
-    department: '',  // Renamed from municipalBody
+    name: "",
+    username: "",
+    email: "",
+    password: "",
+    role: "Student",
+    department: "",
   });
 
-  const [departments, setDepartments] = useState([]); // List of campus departments
-  const [error, setError] = useState('');
+  const [departments, setDepartments] = useState([]);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
   const { name, username, email, password, role, department } = formData;
 
-  // Fetch campus departments for the dropdown on mount
+  // Fetch departments
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        // Updated endpoint to fetch campus departments
-        const res = await axios.get('/api/departments');
+        const res = await axios.get("/api/departments");
         setDepartments(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.error('Error fetching departments:', err);
-        setError('Could not load departments. Staff registration may be limited.');
+        console.error(err);
+        setError("Could not load departments.");
       }
     };
     fetchDepartments();
   }, []);
 
   const onChange = (e) => {
-    const { name: field, value } = e.target;
+    const { name, value } = e.target;
 
-    // Reset department selection if switching back to Student
-    if (field === 'role' && value === 'Student') {
-      setFormData((prev) => ({ ...prev, role: value, department: '' }));
+    if (name === "role" && value === "Student") {
+      setFormData((prev) => ({ ...prev, role: value, department: "" }));
       return;
     }
 
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const validateEmail = (email) => {
+    return email.endsWith(".edu");
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setError("");
 
-    // Validation: Staff must select a department
-    if (role === 'Staff' && !department) {
-      setError('Please select your assigned department.');
-      setLoading(false);
+    if (!validateEmail(email)) {
+      setError("Invalid campus email. Must use .edu domain.");
+      return;
+    }
+
+    if (role === "Staff" && !department) {
+      setError("Please select your assigned department.");
       return;
     }
 
     try {
-      const res = await axios.post('/api/auth/register', formData);
+      setLoading(true);
 
-      // Auto-login if the backend returns a token
+      const res = await axios.post("/api/auth/register", formData);
+
       if (res.data?.token) {
         login(res.data.token);
-        navigate('/dashboard');
+        navigate("/dashboard");
       } else {
-        navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
+        navigate("/login");
       }
     } catch (err) {
-      const msg = err.response?.data?.msg || err.response?.data?.errors || err.message;
-      setError(Array.isArray(msg) ? msg.map(m => m.msg || m).join(' | ') : msg);
+      const msg =
+        err.response?.data?.msg ||
+        err.response?.data?.errors ||
+        err.message;
+
+      setError(Array.isArray(msg) ? msg.join(" | ") : msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900 px-4 py-12 pt-24">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-2xl shadow-2xl border border-gray-700">
-        <div className="text-center">
-          <h1 className="text-4xl font-black text-white tracking-tighter">
-            Uni<span className="text-cyan-400">Fix</span>
+    <div className="min-h-screen flex items-center justify-center bg-[#0c1321] px-4">
+
+      {/* BACKGROUND GLOW */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#55e0d2]/10 blur-[120px] rounded-full"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-[#ffbca3]/10 blur-[120px] rounded-full"></div>
+      </div>
+
+      <div className="w-full max-w-md">
+
+        {/* HEADER */}
+        <div className="text-center mb-8 flex flex-col items-center">
+          <div className="w-14 h-14 bg-[#2e3544] rounded-2xl flex items-center justify-center shadow-[0_12px_40px_rgba(0,0,0,0.4)] mb-5">
+            <span className="material-symbols-outlined text-[32px] text-[#55e0d2]">
+              school
+            </span>
+          </div>
+
+          <h1 className="text-[28px] font-bold text-[#dce2f6]">
+            Create Account
           </h1>
-          <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px] mt-2">
-            Create Your Campus Account
+
+          <p className="text-sm text-[#bbcac6] mt-2">
+            Join the UniFix campus network
           </p>
         </div>
 
-        <form className="space-y-4" onSubmit={onSubmit}>
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-xs font-bold">
-              {error}
-            </div>
-          )}
+        {/* CARD */}
+        <div className="bg-[#19202e] p-5 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
 
-          {/* Identity Section */}
-          <div className="space-y-3">
-            <input
-              type="text"
-              name="name"
-              placeholder="Full Name (e.g. Jane Doe)"
-              value={name}
-              onChange={onChange}
-              required
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
-            />
-            <input
-              type="text"
-              name="username"
-              placeholder="Username"
-              value={username}
-              onChange={onChange}
-              required
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Campus Email"
-              value={email}
-              onChange={onChange}
-              required
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password (Min. 6 chars)"
-              value={password}
-              onChange={onChange}
-              required
-              minLength="6"
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
-            />
-          </div>
+          <form onSubmit={onSubmit} className="flex flex-col gap-5">
 
-          {/* Role Selection */}
-          <div className="pt-2">
-            <label className="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">
-              Select Your Role
-            </label>
-            <div className="flex gap-2">
+            {/* ROLE */}
+            <div className="flex p-1 bg-[#070e1c] rounded-xl">
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, role: 'Student', department: '' })}
-                className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all border ${
-                  role === 'Student' ? 'bg-cyan-600 border-cyan-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-400 hover:bg-gray-650'
+                onClick={() => setFormData({ ...formData, role: "Student", department: "" })}
+                className={`flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-xs font-bold ${
+                  role === "Student"
+                    ? "bg-[#55e0d2] text-[#00201d]"
+                    : "text-[#bbcac6]"
                 }`}
               >
+                <span className="material-symbols-outlined text-[18px]">person</span>
                 Student
               </button>
+
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, role: 'Staff' })}
-                className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all border ${
-                  role === 'Staff' ? 'bg-cyan-600 border-cyan-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-400 hover:bg-gray-650'
+                onClick={() => setFormData({ ...formData, role: "Staff" })}
+                className={`flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-xs font-bold ${
+                  role === "Staff"
+                    ? "bg-[#55e0d2] text-[#00201d]"
+                    : "text-[#bbcac6]"
                 }`}
               >
+                <span className="material-symbols-outlined text-[18px]">badge</span>
                 Staff
               </button>
             </div>
-          </div>
 
-          {/* Department Selection (Conditional) */}
-          {role === 'Staff' && (
-            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-              <label className="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">
-                Assigned Department
-              </label>
+            {/* NAME + USERNAME */}
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                name="name"
+                value={name}
+                onChange={onChange}
+                placeholder="Jane Doe"
+                required
+                className="h-12 bg-[#232a39] rounded-xl px-4 text-[#dce2f6] outline-none focus:ring-2 focus:ring-[#2ec4b6]"
+              />
+
+              <input
+                type="text"
+                name="username"
+                value={username}
+                onChange={onChange}
+                placeholder="@janedoe"
+                required
+                className="h-12 bg-[#232a39] rounded-xl px-4 text-[#dce2f6] outline-none focus:ring-2 focus:ring-[#2ec4b6]"
+              />
+            </div>
+
+            {/* EMAIL */}
+            <div>
+              <input
+                type="email"
+                name="email"
+                value={email}
+                onChange={onChange}
+                placeholder="Campus Email"
+                required
+                className={`h-12 w-full bg-[#232a39] rounded-xl px-4 text-[#dce2f6] outline-none pr-10 ${
+                  error ? "border-b-2 border-red-400" : "focus:ring-2 focus:ring-[#2ec4b6]"
+                }`}
+              />
+              {error && (
+                <p className="text-xs text-red-400 mt-1">{error}</p>
+              )}
+            </div>
+
+            {/* PASSWORD */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={password}
+                onChange={onChange}
+                placeholder="••••••••"
+                required
+                className="h-12 w-full bg-[#232a39] rounded-xl px-4 text-[#dce2f6] outline-none focus:ring-2 focus:ring-[#2ec4b6]"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#859491]"
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
+
+            {/* DEPARTMENT */}
+            {role === "Staff" && (
               <select
                 name="department"
                 value={department}
                 onChange={onChange}
-                required
-                className="w-full px-4 py-3 bg-gray-700 border border-cyan-600/50 rounded-xl text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                className="h-12 w-full bg-[#232a39] rounded-xl px-4 text-[#dce2f6] outline-none focus:ring-2 focus:ring-[#2ec4b6]"
               >
                 <option value="">Select your wing...</option>
-                {departments.map((dept) => (
-                  <option key={dept._id} value={dept._id}>
-                    {dept.name}
+                {departments.map((d) => (
+                  <option key={d._id} value={d._id}>
+                    {d.name}
                   </option>
                 ))}
               </select>
-            </div>
-          )}
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 mt-4 font-black text-xs uppercase tracking-widest text-white bg-cyan-600 rounded-xl hover:bg-cyan-700 transition shadow-lg shadow-cyan-900/20 disabled:bg-gray-600"
-          >
-            {loading ? 'Processing...' : 'Create Account'}
-          </button>
+            {/* BUTTON */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="h-[44px] w-full bg-gradient-to-br from-[#55e0d2] to-[#2ec4b6] text-[#00201d] font-bold rounded-xl flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition"
+            >
+              {loading ? "Creating..." : "Create Account →"}
+            </button>
+          </form>
+        </div>
 
-          <p className="text-sm text-center text-gray-500 font-medium">
-            Already a member?{' '}
-            <Link to="/login" className="text-cyan-400 hover:underline font-bold">
-              Log In
+        {/* FOOTER */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-[#bbcac6]">
+            Already have an account?{" "}
+            <Link to="/login" className="text-[#55e0d2] font-bold hover:underline">
+              Log in
             </Link>
           </p>
-        </form>
+        </div>
+
       </div>
     </div>
   );

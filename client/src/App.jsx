@@ -1,77 +1,86 @@
-import React, { useContext } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthContext } from './context/AuthContext';
+import React, { useContext } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AuthContext } from "./context/AuthContext";
 
-// Import Global Components
-import Navbar from './components/Navbar';
-import ProtectedRoute from './components/ProtectedRoute';
+// Components
+import ProtectedRoute from "./components/ProtectedRoute";
+import TopBar from "./components/TopBar";
+import BottomNav from "./components/BottomNav";
 
-// Import UniFix Pages
-import Home from './pages/Home.jsx';
-import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import SubmitComplaint from './pages/SubmitComplaint.jsx';
-import Leaderboard from './pages/Leaderboard';
+// Pages
+import Home from "./pages/Home.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import SubmitComplaint from "./pages/SubmitComplaint.jsx";
+import Leaderboard from "./pages/Leaderboard";
 
 const App = () => {
   const { loading } = useContext(AuthContext);
+  const location = useLocation();
 
-  // Global Loading Spinner for UniFix Initialization
+  // Pages where we DON'T want TopBar & BottomNav
+  const isAuthPage =
+    location.pathname === "/login" ||
+    location.pathname === "/register";
+
+  // Global Loader
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-cyan-400"></div>
+      <div className="flex items-center justify-center min-h-screen bg-[#0c1321]">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#55e0d2]"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
-      <Navbar />
-      
-      {/* The 'pt-16' padding-top offsets the fixed Navbar height.
-          The 'pb-12' ensures content doesn't hit the bottom of the screen.
-      */}
-      <main className="pt-16 pb-12">
+    <div className="bg-[#0c1321] min-h-screen text-[#dce2f6]">
+
+      {/* TOP BAR (only for app pages) */}
+      {!isAuthPage && <TopBar />}
+
+      {/* MAIN CONTENT */}
+      <main
+        className={`
+          ${!isAuthPage ? "pt-20 pb-24" : ""}
+        `}
+      >
         <Routes>
-          {/* --- PUBLIC ACCESS --- */}
+
+          {/* PUBLIC */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
 
-          {/* --- PROTECTED ACCESS (AUTHENTICATED ONLY) --- */}
-          
-          {/* Dashboard is shared, but displays different content based on role */}
+          {/* PROTECTED */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          {/* STUDENT ONLY: Reporting is restricted to Student roles. 
-              Staff trying to access this via URL will be redirected.
-          */}
           <Route
             path="/submit-complaint"
             element={
-              <ProtectedRoute allowedRoles={['Student']}>
+              <ProtectedRoute allowedRoles={["Student"]}>
                 <SubmitComplaint />
               </ProtectedRoute>
             }
           />
 
-          {/* --- FALLBACK --- */}
-          {/* Redirect any dead links back to the Campus Wall (Home) */}
+          {/* FALLBACK */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+
+      {/* BOTTOM NAV (only for app pages) */}
+      {!isAuthPage && <BottomNav />}
     </div>
   );
-}
+};
 
 export default App;

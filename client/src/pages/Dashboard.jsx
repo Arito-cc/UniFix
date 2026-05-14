@@ -37,90 +37,143 @@ const Dashboard = () => {
     </div>
   );
 
-  return (
-    <div className="container mx-auto p-6 max-w-6xl min-h-screen pt-24">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
-        <div>
-          <h1 className="text-4xl font-black text-white tracking-tighter">
-            {user?.role === 'Staff' ? 'DEPT. QUEUE' : 'MY REPORTS'}
-          </h1>
-          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs mt-1">
-            Logged in as: <span className="text-cyan-400">{user?.role}</span>
-          </p>
+return (
+  <div className="px-6 pt-24 pb-32 max-w-md mx-auto">
+
+    {/* ===== STATS ===== */}
+
+    {/* TOTAL */}
+    <div className="bg-[#151b2a] rounded-xl p-6 mb-4">
+      <p className="text-xs font-bold uppercase tracking-wider text-[#859491]">
+        Total Reports
+      </p>
+
+      <div className="flex justify-between items-end mt-2">
+        <h2 className="text-3xl font-bold text-[#dce2f6]">
+          {stats.total}
+        </h2>
+
+        <div className="flex items-center gap-1 text-[#55e0d2] text-sm font-semibold">
+          📈 +2
         </div>
-        
-        {user?.role === 'Student' && (
-          <Link 
-            to="/submit-complaint" 
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-cyan-900/20"
-          >
-            Report New Issue
-          </Link>
-        )}
       </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <StatCard label="Total Registry" value={stats.total} color="border-gray-700" />
-        <StatCard label="Active Tasks" value={stats.pending} color="border-yellow-500/50" />
-        <StatCard label="Resolved" value={stats.resolved} color="border-green-500/50" />
-      </div>
-
-      {/* Data Table */}
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden shadow-2xl">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-gray-900/50 text-gray-400 text-[10px] font-black uppercase tracking-widest border-b border-gray-700">
-              <th className="p-5">Issue Details</th>
-              <th className="p-5">Location</th>
-              <th className="p-5">Status</th>
-              <th className="p-5 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-700">
-            {complaints.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="p-20 text-center text-gray-600 font-bold uppercase tracking-widest text-xs">
-                  No records found in current scope.
-                </td>
-              </tr>
-            ) : (
-              complaints.map((item) => (
-                <tr key={item._id} className="hover:bg-gray-700/30 transition-colors">
-                  <td className="p-5">
-                    <p className="text-white font-bold">{item.title}</p>
-                    <p className="text-gray-500 text-xs mt-1 line-clamp-1">{item.description}</p>
-                  </td>
-                  <td className="p-5 text-gray-400 text-sm">
-                    {item.location.building} <span className="text-gray-600 text-xs">/</span> {item.location.roomNumber || 'Area'}
-                  </td>
-                  <td className="p-5">
- <StatusBadge status={item.status} />
-                  </td>
-                  <td className="p-5 text-right">
-                    <button onClick={() => setSelectedComplaint(item)} className="text-cyan-400 hover:text-white text-[10px] font-black uppercase tracking-tighter transition-colors">
-                      View Details
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Complaint Detail Modal */}
-      {selectedComplaint && (
-        <ComplaintDetailModal
-          complaint={selectedComplaint}
-          user={user}
-          onClose={() => setSelectedComplaint(null)}
-          onRefresh={() => { /* Re-fetch data after update */ }} // You'll need to pass fetchDashboardData here
-        />
-      )}
     </div>
-  );
+
+    {/* ACTIVE + RESOLVED */}
+    <div className="grid grid-cols-2 gap-4 mb-8">
+
+      <div className="bg-[#151b2a] rounded-xl p-6">
+        <p className="text-xs font-bold uppercase tracking-wider text-[#859491]">
+          Active
+        </p>
+
+        <div className="flex justify-between items-end mt-2">
+          <h2 className="text-3xl font-bold text-[#dce2f6]">
+            {stats.pending}
+          </h2>
+
+          <span className="text-[#ffbca3] text-sm font-semibold">
+            +1
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-[#151b2a] rounded-xl p-6">
+        <p className="text-xs font-bold uppercase tracking-wider text-[#859491]">
+          Resolved
+        </p>
+
+        <div className="flex justify-between items-end mt-2">
+          <h2 className="text-3xl font-bold text-[#dce2f6]">
+            {stats.resolved}
+          </h2>
+
+          <span className="text-[#55e0d2] text-sm font-semibold">
+            +1
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {/* ===== HEADER ===== */}
+    <div className="flex justify-between items-center mb-6">
+      <h2 className="text-xl font-semibold text-[#dce2f6]">
+        Recent Reports
+      </h2>
+
+      <button className="text-sm font-bold text-[#55e0d2]">
+        View All
+      </button>
+    </div>
+
+    {/* ===== LIST ===== */}
+    <div className="flex flex-col gap-4">
+
+      {complaints.map((item) => (
+        <div
+          key={item._id}
+          className="bg-[#19202e] rounded-xl p-5 hover:bg-[#232a39] transition"
+        >
+
+          {/* TOP */}
+          <div className="flex justify-between">
+
+            <div>
+              <h3 className="text-lg font-medium text-[#dce2f6] leading-tight">
+                {item.title}
+              </h3>
+
+              <p className="text-sm text-[#bbcac6] mt-1">
+                {item.status === "Resolved"
+                  ? "Resolved"
+                  : "Reported"}{" "}
+                • {item.location.building}
+              </p>
+            </div>
+
+            <StatusBadge status={item.status} />
+          </div>
+
+          {/* BOTTOM */}
+          <div className="flex justify-between items-center mt-4">
+
+            <div className="text-xs text-[#859491]">
+              {item.description?.slice(0, 40)}...
+            </div>
+
+            <button
+              onClick={() => setSelectedComplaint(item)}
+              className="text-[#55e0d2] font-bold text-sm hover:underline"
+            >
+              View Details
+            </button>
+          </div>
+        </div>
+      ))}
+
+    </div>
+
+    {/* ===== FAB ===== */}
+    {user?.role === "Student" && (
+      <Link
+        to="/submit-complaint"
+        className="fixed bottom-24 right-6 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#55e0d2] to-[#2ec4b6] text-[#00201d] flex items-center justify-center text-3xl shadow-xl active:scale-95"
+      >
+        +
+      </Link>
+    )}
+
+    {/* MODAL */}
+    {selectedComplaint && (
+      <ComplaintDetailModal
+        complaint={selectedComplaint}
+        user={user}
+        onClose={() => setSelectedComplaint(null)}
+        onRefresh={() => {}}
+      />
+    )}
+  </div>
+);
 };
 
 // Sub-components for cleaner code
@@ -132,15 +185,18 @@ const StatCard = ({ label, value, color }) => (
 );
 
 const StatusBadge = ({ status }) => {
-  const styles = {
-    Submitted: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    "In Progress": "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-    Resolved: "bg-green-500/10 text-green-500 border-green-500/20",
-  };
+  if (status === "Resolved") {
+    return (
+      <div className="bg-[#2ec4b6]/20 text-[#2ec4b6] px-3 py-1 rounded-full text-xs font-bold">
+        RESOLVED
+      </div>
+    );
+  }
+
   return (
-    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${styles[status] || styles.Submitted}`}>
-      {status}
-    </span>
+    <div className="bg-[#ffbca3]/20 text-[#ffbca3] px-3 py-1 rounded-full text-xs font-bold">
+      PENDING
+    </div>
   );
 };
 
